@@ -10,44 +10,49 @@
 """
 
 import os
-from scipy.io  import loadmat
+from scipy.io import loadmat
 import numpy as np
 import random
-from sklearn.preprocessing  import scale, StandardScaler, MinMaxScaler
+from sklearn.preprocessing import scale, StandardScaler, MinMaxScaler
 from collections import Counter
 import smote_variants as sv
 # import matplotlib.pyplot as plt
 
-def iteror_raw_data(data_path,data_mark):
+def iteror_raw_data(data_path, data_mark):
     """ 
        打标签，并返回数据的生成器：标签，样本数据。
-  
+
        :param data_path：.mat文件所在路径
-       :param data_mark："FE" 或 "DE"                                                   
+       :param data_mark："FE" 或 "DE"
        :return iteror：（标签，样本数据）
-    """  
+    """
 
     # 标签数字编码
-    labels = {"normal":0, "IR007":1, "IR014":2, "IR021":3, "OR007":4,
-            "OR014":5, "OR021":6}
+    labels = {"normal": 0, "B007": 1, "B014": 2, "B021": 3, "IR007": 4,
+              "IR014": 5, "IR021": 6, "OR007": 7, "OR014": 8, "OR021": 9}
 
     # 列出所有文件
     filenams = os.listdir(data_path)
 
     # 逐个对mat文件进行打标签和数据提取
-    for single_mat in filenams: 
-        
+    for single_mat in filenams:
+
         single_mat_path = os.path.join(data_path, single_mat)
+        # 初始化标签变量
+        label = -1
         # 打标签
-        for key, _ in labels.items():
+        for key in labels:
             if key in single_mat:
                 label = labels[key]
+                break
+        if label == -1:
+            continue
 
         # 数据提取
         file = loadmat(single_mat_path)
         for key, _ in file.items():
             if data_mark in key:
-                 data = file[key].ravel()   # series
+                data = file[key].ravel()  # series
         yield label, data
 
 def data_augment(fs, win_tlen, overlap_rate, data_iteror):
@@ -85,7 +90,6 @@ def data_augment(fs, win_tlen, overlap_rate, data_iteror):
     X = np.array(X)  
     y = np.array(y)
 
-  
     return X, y
 
 def under_sample_for_c0(X, y, low_c0, high_c0, random_seed):  # -> 没有使用
@@ -101,8 +105,8 @@ def under_sample_for_c0(X, y, low_c0, high_c0, random_seed):  # -> 没有使用
     np.random.seed(random_seed)
     to_drop_ind = random.sample(range(low_c0, high_c0), (high_c0 - low_c0 + 1) - len(y[y==3]))    
     # 按照行删除    
-    X = np.delete(X,to_drop_ind,0)
-    y = np.delete(y,to_drop_ind,0)
+    X = np.delete(X, to_drop_ind, 0)
+    y = np.delete(y, to_drop_ind, 0)
     return X, y
 
 def over_sample(X, y, len_data, random_seed=None):  # -> 没有使用
@@ -118,13 +122,12 @@ def preprocess(path, data_mark, fs, win_tlen,
     win_len = int(fs*win_tlen)
     data_iteror = iteror_raw_data(path, data_mark)
     X, y = data_augment(fs, win_tlen, overlap_rate, data_iteror, **kargs)
-    # print(len(y[y==0]))
-    
+
     print("-> 数据位置:{}".format(path))
     print("-> 原始数据采样频率:{0}Hz,\n-> 数据增强后共有：{1}条,"           
-           .format(fs,  X.shape[0]))
+          .format(fs,  X.shape[0]))
     print("-> 单个数据长度：{0}采样点,\n-> 重叠量:{1}个采样点,"
-           .format(X.shape[1], int(overlap_rate*win_tlen*fs // 100)) )
+          .format(X.shape[1], int(overlap_rate*win_tlen*fs // 100)) )
     print("-> 类别数据数目:",  sorted(Counter(y).items()))
     return X, y
 

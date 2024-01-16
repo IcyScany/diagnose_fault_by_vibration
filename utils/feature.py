@@ -38,15 +38,15 @@ def extract_feature(X, y,fs):
     data_mark = "FE"
     len_data = 1024
     overlap_rate = 50 # 50%
-    random_seed = 1 
+    random_seed = 1
     fs = 12000
 
-    X, y = preprocess(path, 
-                      data_mark, 
-                      fs, 
-                      len_data/fs, 
-                      overlap_rate, 
-                      random_seed ) 
+    X, y = preprocess(path,
+                      data_mark,
+                      fs,
+                      len_data/fs,
+                      overlap_rate,
+                      random_seed )
     # -2- 提取特征
     FX, Fy = extract_feature(X, y, fs)
 
@@ -76,7 +76,7 @@ def extract_feature(X, y,fs):
         xf = np.linspace(0.0, 1.0/(2.0*T), N//2)
         # 返回最大幅值的频率
         maxf = xf[np.argwhere(y_envsp == np.max(y_envsp))[0][0]]
-        return  maxf
+        return maxf
     
     def hist_for_entropy(s):
         """ 
@@ -150,15 +150,18 @@ def extract_feature(X, y,fs):
         s_median = np.median(s)
         s_median_icell = int(np.round((s_median - c_min) / (c_max - c_min) * ncell + 1/2))
         
-        return  pdf[s_median_icell]
+        return pdf[s_median_icell]
     
     feature = {}
     N = len(X[0])
+    # 'mean', 'rms', 'std', 'pp', 'skewness', 'kurtosis', 'maxf', 'signal_entropy', 'am_median_pdf'
+    #  ['均值', '均方根', '标准差', '峰峰值', '偏度值', '峰度', '包络谱最大幅值处的频率', '香农信号熵的无偏估计值', '幅值中位数处的概率密度估计']
     feature['mean'] = [np.mean(x) for x in X]
-    feature['rms'] = [np.sqrt(np.dot(np.ravel(x),np.ravel(x))/ N) for x in X]
+    feature['rms'] = [np.sqrt(np.dot(np.ravel(x), np.ravel(x)) / N) for x in X]
     feature['std'] = [np.std(x) for x in X]
+    feature['pp'] = [(np.max(x) - np.min(x)) for x in X]
     feature['skewness'] = [skewness(x) for x in X]
-    feature['kurtosis'] = [kurtosis(x,fisher=False) for x in X]
+    feature['kurtosis'] = [kurtosis(x, fisher=False) for x in X]
     feature['maxf'] = [maxf_in_env_spectrum(x, fs) for x in X]
     feature['signal_entropy'] = [shannom_entropy_for_hist(x) for x in X]
     feature['am_median_pdf'] = [pdf_for_median_am(x) for x in X]
@@ -168,7 +171,7 @@ def extract_feature(X, y,fs):
     f_datafram = pd.DataFrame([feature[k] for k in feature.keys()], index=list(feature.keys())).T
     
     # 返回 FX，Fy 
-    features = ['mean', 'rms', 'std', 'skewness', 'kurtosis', 'maxf', 'signal_entropy', 'am_median_pdf']
+    features = ['mean', 'rms', 'std', 'skewness', 'pp', 'kurtosis', 'maxf', 'signal_entropy', 'am_median_pdf']
     FX, Fy = f_datafram[features], f_datafram['label'] 
     
     return FX, Fy
@@ -180,7 +183,7 @@ if __name__ == "__main__":
     path = r"./data/0HP"
     data_mark = "FE"
     len_data = 1024
-    overlap_rate = 50 # 50%
+    overlap_rate = 50  # 50%
     random_seed = 1 
     fs = 12000
 
@@ -189,7 +192,6 @@ if __name__ == "__main__":
                       fs, 
                       len_data/fs, 
                       overlap_rate, 
-                      random_seed ) 
+                      random_seed)
     # -2- 提取特征
     FX, Fy = extract_feature(X, y, fs)
-    

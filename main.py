@@ -31,11 +31,11 @@ random_seed = 1
 fs = 12000
 
 X, y = preprocess(path, 
-                    data_mark, 
-                    fs, 
-                    len_data/fs, 
-                    overlap_rate, 
-                    random_seed ) 
+                  data_mark,
+                  fs,
+                  len_data/fs,
+                  overlap_rate,
+                  random_seed)
 
 # -2- 提取特征
 FX, Fy = extract_feature(X, y, fs)
@@ -47,17 +47,15 @@ x_train, x_test, y_train, y_test = train_test_split(FX,
                                                     random_state=2)
 
 # -4- 模型训练和保存
-
 # K近邻
 knn = make_pipeline(StandardScaler(),  
-                     KNeighborsClassifier(3))
+                    KNeighborsClassifier(3))
 knn.fit(x_train, y_train)
 # 保存Model(models 文件夹要预先建立，否则会报错)
 joblib.dump(knn, 'models/knn.pkl')
-print("KNN model saved in ./models")
 
 score = knn.score(x_test, y_test) * 100
-print("KNN score is: %.3f"%score, "in test dataset")
+print("KNN score is: %.3f" % score, "in test dataset")
 
 # 高斯分布的贝叶斯
 nbg = make_pipeline(StandardScaler(),  
@@ -65,17 +63,16 @@ nbg = make_pipeline(StandardScaler(),
 nbg.fit(x_train, y_train)
 
 joblib.dump(nbg, 'models/GaussianNB.pkl')
-print("GaussianNB model saved in ./models")
 
 score = nbg.score(x_test, y_test) * 100
-print("GaussianNB score is: %.3f"%score, "in test dataset")
+print("GaussianNB score is: %.3f" % score, "in test dataset")
+
 # 随机森林
 rfc = make_pipeline(StandardScaler(),
                     RandomForestClassifier(max_depth=6, random_state=0))
 rfc.fit(x_train, y_train)
 
 joblib.dump(rfc, 'models/RandomForest.pkl')
-print("RandomForest model saved in ./models")
 
 score = rfc.score(x_test, y_test) * 100
-print("RandomForest score is: %.3f"%score,  "in test dataset")
+print("RandomForest score is: %.3f" % score,  "in test dataset")
