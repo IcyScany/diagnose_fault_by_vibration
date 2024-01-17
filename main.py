@@ -17,6 +17,12 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
+from sklearn.feature_selection import SelectKBest, f_regression
+from sklearn.metrics import classification_report
+from sklearn.svm import SVC
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel, Sum, Matern, RationalQuadratic
 import joblib         # -> 用来保存模型
 
 from utils.augment import preprocess
@@ -48,7 +54,7 @@ x_train, x_test, y_train, y_test = train_test_split(FX,
 
 # -4- 模型训练和保存
 # K近邻
-knn = make_pipeline(StandardScaler(),  
+knn = make_pipeline(StandardScaler(),
                     KNeighborsClassifier(3))
 knn.fit(x_train, y_train)
 # 保存Model(models 文件夹要预先建立，否则会报错)
@@ -58,7 +64,7 @@ score = knn.score(x_test, y_test) * 100
 print("KNN score is: %.3f" % score, "in test dataset")
 
 # 高斯分布的贝叶斯
-nbg = make_pipeline(StandardScaler(),  
+nbg = make_pipeline(StandardScaler(),
                     GaussianNB())
 nbg.fit(x_train, y_train)
 
@@ -66,6 +72,26 @@ joblib.dump(nbg, 'models/GaussianNB.pkl')
 
 score = nbg.score(x_test, y_test) * 100
 print("GaussianNB score is: %.3f" % score, "in test dataset")
+
+# 高斯 Matérn 内核【gaussian_process.kernels.Matern】
+nbg = make_pipeline(StandardScaler(),
+                    GaussianProcessRegressor(kernel=1.0 * Matern(length_scale=1.0, nu=1.5)))
+nbg.fit(x_train, y_train)
+
+joblib.dump(nbg, 'models/Gaussian_Matérn.pkl')
+
+score = nbg.score(x_test, y_test) * 100
+print("Gaussian Matérn score is: %.3f" % score, "in test dataset")
+
+# 高斯  有理二次内核【gaussian_process.kernels.RationalQuadratic】
+nbg = make_pipeline(StandardScaler(),
+                    GaussianProcessRegressor(kernel=RationalQuadratic(length_scale=1.0, alpha=1.5)))
+nbg.fit(x_train, y_train)
+
+joblib.dump(nbg, 'models/Gaussian_RationalQuadratic.pkl')
+
+score = nbg.score(x_test, y_test) * 100
+print("Gaussian RationalQuadratic score is: %.3f" % score, "in test dataset")
 
 # 随机森林
 rfc = make_pipeline(StandardScaler(),
@@ -76,3 +102,16 @@ joblib.dump(rfc, 'models/RandomForest.pkl')
 
 score = rfc.score(x_test, y_test) * 100
 print("RandomForest score is: %.3f" % score,  "in test dataset")
+
+# SVM
+svm = make_pipeline(StandardScaler(), SVC(kernel='rbf', gamma=0.5))
+svm.fit(x_train, y_train)
+
+# y_pred = svm.predict(x_test)
+# print(classification_report(y_test, y_pred))
+
+# coef = svm[:-1].inverse_transform(svm['linearsvc'].coef_)
+# print(coef)
+
+score = svm.score(x_test, y_test) * 100
+print("svm score is: %.3f" % score,  "in test dataset")
